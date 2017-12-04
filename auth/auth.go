@@ -32,6 +32,7 @@ const firebaseAudience = "https://identitytoolkit.googleapis.com/google.identity
 const googleCertURL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 const issuerPrefix = "https://securetoken.google.com/"
 const tokenExpSeconds = 3600
+const allowedClockSkew = 15
 
 var reservedClaims = []string{
 	"acr", "amr", "at_hash", "aud", "auth_time", "azp", "cnf", "c_hash",
@@ -206,7 +207,7 @@ func (c *Client) VerifyIDToken(idToken string) (*Token, error) {
 	} else if p.Issuer != issuer {
 		err = fmt.Errorf("ID token has invalid 'iss' (issuer) claim. Expected %q but got %q. %s %s",
 			issuer, p.Issuer, projectIDMsg, verifyTokenMsg)
-	} else if p.IssuedAt > clk.Now().Unix() {
+	} else if p.IssuedAt - allowedClockSkew > clk.Now().Unix() {
 		err = fmt.Errorf("ID token issued at future timestamp: %d", p.IssuedAt)
 	} else if p.Expires < clk.Now().Unix() {
 		err = fmt.Errorf("ID token has expired. Expired at: %d", p.Expires)
